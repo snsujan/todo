@@ -67,7 +67,7 @@ const server = http.createServer(async (req, res) => {
         
         req.on('end', async () => {
           try {
-            const { text, priority, category, dueDate } = JSON.parse(body);
+            const { text, priority, category, dueDate, status, subtasks } = JSON.parse(body);
             
             if (!text) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -81,7 +81,9 @@ const server = http.createServer(async (req, res) => {
               priority: priority || 'medium',
               category: category || 'Personal',
               dueDate: dueDate || null,
-              completed: false,
+              status: status || 'todo',
+              subtasks: Array.isArray(subtasks) ? subtasks : [],
+              completed: status === 'completed' || false,
               createdAt: new Date().toISOString()
             };
 
@@ -113,7 +115,7 @@ const server = http.createServer(async (req, res) => {
 
         req.on('end', async () => {
           try {
-            const { text, priority, category, dueDate, completed } = JSON.parse(body);
+            const { text, priority, category, dueDate, completed, status, subtasks } = JSON.parse(body);
             const todos = await readTodos();
             const index = todos.findIndex(t => t.id === id);
 
@@ -127,7 +129,16 @@ const server = http.createServer(async (req, res) => {
             if (priority !== undefined) todos[index].priority = priority;
             if (category !== undefined) todos[index].category = category;
             if (dueDate !== undefined) todos[index].dueDate = dueDate;
-            if (completed !== undefined) todos[index].completed = completed;
+            if (completed !== undefined) {
+              todos[index].completed = completed;
+              if (completed) todos[index].status = 'completed';
+              else if (todos[index].status === 'completed') todos[index].status = 'todo';
+            }
+            if (status !== undefined) {
+              todos[index].status = status;
+              todos[index].completed = (status === 'completed');
+            }
+            if (subtasks !== undefined) todos[index].subtasks = subtasks;
 
             await writeTodos(todos);
 

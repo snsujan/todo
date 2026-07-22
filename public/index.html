@@ -87,13 +87,21 @@
       <form id="todo-form" class="glass-panel">
         <div class="input-row main-input-row">
           <div class="input-wrapper">
-            <i data-lucide="plus-circle" class="input-decor-icon"></i>
-            <input type="text" id="todo-input" placeholder="What will you accomplish today?" required autocomplete="off">
+            <i data-lucide="sparkles" class="input-decor-icon ai-sparkle"></i>
+            <input type="text" id="todo-input" placeholder="Try AI Smart Input: 'Buy milk tomorrow at 5pm high priority'..." required autocomplete="off">
           </div>
           <button type="submit" class="btn-primary">
             <span>Add Task</span>
             <i data-lucide="plus"></i>
           </button>
+        </div>
+
+        <!-- AI Parser Realtime Detection Preview -->
+        <div id="ai-parser-preview" class="ai-parser-preview hidden">
+          <span class="ai-badge-title">✨ AI Parsed:</span>
+          <span id="ai-tag-date" class="ai-tag hidden"><i data-lucide="calendar"></i> <span class="val"></span></span>
+          <span id="ai-tag-prio" class="ai-tag hidden"><i data-lucide="flag"></i> <span class="val"></span></span>
+          <span id="ai-tag-cat" class="ai-tag hidden"><i data-lucide="tag"></i> <span class="val"></span></span>
         </div>
         
         <div class="input-row options-row">
@@ -141,6 +149,12 @@
       </div>
       
       <div class="filter-sort-wrapper">
+        <!-- View Mode Switcher -->
+        <div class="view-switcher">
+          <button id="view-list-btn" class="view-btn active" title="List View"><i data-lucide="list"></i> List</button>
+          <button id="view-kanban-btn" class="view-btn" title="Kanban Board View"><i data-lucide="kanban"></i> Board</button>
+        </div>
+
         <div class="filter-tabs">
           <button class="filter-tab active" data-filter="all">All</button>
           <button class="filter-tab" data-filter="active">Active</button>
@@ -156,7 +170,7 @@
       </div>
     </section>
 
-    <!-- Todo List Board -->
+    <!-- Todo List Board / View -->
     <main class="todos-board">
       <div id="loading-spinner" class="spinner-container hidden">
         <div class="spinner"></div>
@@ -171,9 +185,40 @@
         <p>Add a task above or adjust your search filters to get started.</p>
       </div>
 
+      <!-- List View -->
       <ul id="todos-list" class="todos-list">
         <!-- Dynamic Items Go Here -->
       </ul>
+
+      <!-- Kanban Board View -->
+      <div id="kanban-board" class="kanban-board hidden">
+        <!-- Column 1: To Do -->
+        <div class="kanban-column" data-status="todo">
+          <div class="kanban-header prio-low">
+            <span class="col-title"><i data-lucide="circle"></i> To Do</span>
+            <span class="col-count" id="count-todo">0</span>
+          </div>
+          <div class="kanban-cards" id="cards-todo"></div>
+        </div>
+
+        <!-- Column 2: In Progress -->
+        <div class="kanban-column" data-status="in-progress">
+          <div class="kanban-header prio-medium">
+            <span class="col-title"><i data-lucide="loader"></i> In Progress</span>
+            <span class="col-count" id="count-in-progress">0</span>
+          </div>
+          <div class="kanban-cards" id="cards-in-progress"></div>
+        </div>
+
+        <!-- Column 3: Completed -->
+        <div class="kanban-column" data-status="completed">
+          <div class="kanban-header prio-high">
+            <span class="col-title"><i data-lucide="check-circle-2"></i> Done</span>
+            <span class="col-count" id="count-completed">0</span>
+          </div>
+          <div class="kanban-cards" id="cards-completed"></div>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -181,6 +226,8 @@
     <p>&copy; 2026 <strong>Abdul Kader Workspace</strong>. All rights reserved.</p>
   </footer>
 
+  <!-- Confetti Engine CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <!-- App Logic -->
   <script src="app.js"></script>
 </body>
