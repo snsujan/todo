@@ -87,17 +87,29 @@ function setupEventListeners() {
   });
 }
 
+// LocalStorage Fallback Helpers
+function getStoredTodos() {
+  try { return JSON.parse(localStorage.getItem('taskify_todos') || '[]'); }
+  catch (e) { return []; }
+}
+function setStoredTodos(todos) {
+  try { localStorage.setItem('taskify_todos', JSON.stringify(todos)); }
+  catch (e) {}
+}
+
 // API Communication
 async function fetchTodos() {
   showLoading(true);
   try {
     const res = await fetch('/api/todos');
-    if (!res.ok) throw new Error('Failed to fetch tasks');
+    if (!res.ok) throw new Error('API server unavailable');
     state.todos = await res.json();
+    setStoredTodos(state.todos);
     renderTodos();
   } catch (error) {
-    console.error('API Error:', error);
-    showErrorMessage();
+    console.warn('API unavailable, falling back to local storage:', error.message);
+    state.todos = getStoredTodos();
+    renderTodos();
   } finally {
     showLoading(false);
   }
@@ -118,8 +130,15 @@ async function handleAddTodo(e) {
 
   const category = categorySelect.value;
   const dueDate = dueDateInput.value || null;
-
-  const newTodo = { text, priority, category, dueDate };
+  const newTodo = {
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
+    text,
+    priority,
+    category,
+    dueDate,
+    completed: false,
+    createdAt: new Date().toISOString()
+  };
 
   try {
     const res = await fetch('/api/todos', {
@@ -127,85 +146,73 @@ async function handleAddTodo(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newTodo)
     });
-    if (!res.ok) throw new Error('Failed to add task');
-    
-    const addedTodo = await res.json();
-    state.todos.unshift(addedTodo); // Add to front of list
-    
-    // Reset Form
-    todoInput.value = '';
-    dueDateInput.value = '';
-    document.getElementById('prio-medium').checked = true;
-    categorySelect.selectedIndex = 0;
-    
-    renderTodos();
+    if (res.ok) {
+      const addedTodo = await res.json();
+      state.todos.unshift(addedTodo);
+    } else {
+      state.todos.unshift(newTodo);
+    }
   } catch (error) {
-    console.error('API Error:', error);
-    alert('Could not save task. Please try again.');
+    state.todos.unshift(newTodo);
   }
+
+  setStoredTodos(state.todos);
+  todoInput.value = '';
+  dueDateInput.value = '';
+  document.getElementById('prio-medium').checked = true;
+  categorySelect.selectedIndex = 0;
+  renderTodos();
 }
 
 async function toggleTodoComplete(id, completed) {
-  try {
-    const todo = state.todos.find(t => t.id === id);
-    if (!todo) return;
+  const todo = state.todos.find(t => t.id === id);
+  if (!todo) return;
+  todo.completed = completed;
+  setStoredTodos(state.todos);
+  renderTodos();
 
-    const res = await fetch(`/api/todos/${id}`, {
+  try {
+    await fetch(`/api/todos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...todo, completed })
     });
-    
-    if (!res.ok) throw new Error('Failed to update task');
-    
-    // Update local state
-    todo.completed = completed;
-    renderTodos();
   } catch (error) {
-    console.error('API Error:', error);
-    alert('Failed to update task state.');
-    fetchTodos(); // Sync back
+    // Graceful offline fallback
   }
 }
 
 async function updateTodoText(id, text) {
-  try {
-    const todo = state.todos.find(t => t.id === id);
-    if (!todo || todo.text === text) return;
+  const todo = state.todos.find(t => t.id === id);
+  if (!todo || todo.text === text) return;
+  todo.text = text;
+  setStoredTodos(state.todos);
+  renderTodos();
 
-    const res = await fetch(`/api/todos/${id}`, {
+  try {
+    await fetch(`/api/todos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...todo, text })
     });
-    
-    if (!res.ok) throw new Error('Failed to save task edit');
-    
-    todo.text = text;
-    renderTodos();
   } catch (error) {
-    console.error('API Error:', error);
-    alert('Failed to save changes.');
-    fetchTodos();
+    // Graceful offline fallback
   }
 }
 
 async function deleteTodo(id, itemElement) {
-  // Apply a transition before deleting from state
   itemElement.style.transform = 'translateX(50px) scale(0.9)';
   itemElement.style.opacity = '0';
   
   setTimeout(async () => {
+    state.todos = state.todos.filter(t => t.id !== id);
+    setStoredTodos(state.todos);
+    renderTodos();
+
     try {
-      const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete task');
-      
-      state.todos = state.todos.filter(t => t.id !== id);
-      renderTodos();
+      await fetch(`/api/todos/${id}`, { method: 'DELETE' });
     } catch (error) {
-      console.error('API Error:', error);
-      alert('Failed to delete task.');
-      fetchTodos();
+      // Graceful offline fallback
     }
   }, 250);
 }
