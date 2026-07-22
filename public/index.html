@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taskify // Modern Workspace</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="background-decor">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="brand-avatar">
+          <img src="abdul_kader_logo.png" alt="Abdul Kader" class="brand-logo-img">
+        </div>
+        <div class="logo-text">
+          <div class="title-with-badge">
+            <h1>Abdul Kader</h1>
+            <span class="brand-tag">Workspace</span>
+          </div>
+          <p>Personal Task Manager</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <div class="user-profile-badge">
+          <span class="status-indicator"></span>
+          <span class="profile-name">Abdul Kader</span>
+        </div>
+        <button id="theme-toggle" class="btn-icon" aria-label="Toggle theme">
+          <i data-lucide="sun" class="sun-icon"></i>
+          <i data-lucide="moon" class="moon-icon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats Dashboard -->
+    <section class="stats-dashboard">
+      <div class="stat-card">
+        <div class="stat-icon total"><i data-lucide="list-todo"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stats-total">0</span>
+          <span class="stat-label">Total Tasks</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon completed"><i data-lucide="clipboard-check"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stats-completed">0</span>
+          <span class="stat-label">Completed</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pending"><i data-lucide="clock"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stats-pending">0</span>
+          <span class="stat-label">Pending</span>
+        </div>
+      </div>
+      <div class="stat-card progress-card">
+        <div class="stat-info">
+          <span class="stat-value" id="stats-ratio">0%</span>
+          <span class="stat-label">Efficiency</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="stats-progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Input Form -->
+    <section class="input-section">
+      <form id="todo-form" class="glass-panel">
+        <div class="input-row main-input-row">
+          <div class="input-wrapper">
+            <i data-lucide="plus-circle" class="input-decor-icon"></i>
+            <input type="text" id="todo-input" placeholder="What will you accomplish today?" required autocomplete="off">
+          </div>
+          <button type="submit" class="btn-primary">
+            <span>Add Task</span>
+            <i data-lucide="plus"></i>
+          </button>
+        </div>
+        
+        <div class="input-row options-row">
+          <!-- Priority Selector -->
+          <div class="form-group">
+            <label><i data-lucide="flag"></i> Priority</label>
+            <div class="priority-selector">
+              <input type="radio" id="prio-low" name="priority" value="low">
+              <label for="prio-low" class="prio-tag low">Low</label>
+              
+              <input type="radio" id="prio-medium" name="priority" value="medium" checked>
+              <label for="prio-medium" class="prio-tag medium">Medium</label>
+              
+              <input type="radio" id="prio-high" name="priority" value="high">
+              <label for="prio-high" class="prio-tag high">High</label>
+            </div>
+          </div>
+
+          <!-- Category Selector -->
+          <div class="form-group">
+            <label for="category-select"><i data-lucide="tag"></i> Category</label>
+            <select id="category-select" class="custom-select">
+              <option value="Work">💻 Work</option>
+              <option value="Personal">🏠 Personal</option>
+              <option value="Wellness">🌱 Wellness</option>
+              <option value="Shopping">🛒 Shopping</option>
+              <option value="Finance">💰 Finance</option>
+            </select>
+          </div>
+
+          <!-- Due Date -->
+          <div class="form-group">
+            <label for="due-date"><i data-lucide="calendar"></i> Due Date</label>
+            <input type="date" id="due-date" class="custom-date-input">
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Filter & Search Controls -->
+    <section class="controls-section glass-panel">
+      <div class="search-wrapper">
+        <i data-lucide="search" class="search-icon"></i>
+        <input type="text" id="search-input" placeholder="Filter tasks by name...">
+      </div>
+      
+      <div class="filter-sort-wrapper">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="active">Active</button>
+          <button class="filter-tab" data-filter="completed">Completed</button>
+        </div>
+
+        <select id="sort-select" class="custom-select sort-select">
+          <option value="date-desc">Newest First</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="priority-desc">Priority: High to Low</option>
+          <option value="due-date-asc">Soonest Due</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Todo List Board -->
+    <main class="todos-board">
+      <div id="loading-spinner" class="spinner-container hidden">
+        <div class="spinner"></div>
+        <p>Syncing task workspace...</p>
+      </div>
+      
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-icon-wrapper">
+          <i data-lucide="sparkles"></i>
+        </div>
+        <h3>No tasks found</h3>
+        <p>Add a task above or adjust your search filters to get started.</p>
+      </div>
+
+      <ul id="todos-list" class="todos-list">
+        <!-- Dynamic Items Go Here -->
+      </ul>
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    <p>&copy; 2026 <strong>Abdul Kader Workspace</strong>. All rights reserved.</p>
+  </footer>
+
+  <!-- App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
