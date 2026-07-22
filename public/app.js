@@ -45,6 +45,8 @@ const statsProgressFill = document.getElementById('stats-progress-fill');
 // Init application
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  updateSoundToggleUI();
+  updateStreakAndLevelDisplay();
   fetchTodos();
   setupEventListeners();
 });
@@ -112,6 +114,15 @@ function parseSmartInput(text) {
 // Event Listeners
 function setupEventListeners() {
   themeToggle.addEventListener('click', toggleTheme);
+  
+  if (soundToggle) {
+    soundToggle.addEventListener('click', () => {
+      state.soundEnabled = !state.soundEnabled;
+      localStorage.setItem('sound_enabled', state.soundEnabled.toString());
+      updateSoundToggleUI();
+    });
+  }
+
   todoForm.addEventListener('submit', handleAddTodo);
 
   // View Switcher
@@ -212,35 +223,116 @@ function setStoredTodos(todos) {
   catch (e) {}
 }
 
+// Sound & Gamification State
+state.soundEnabled = localStorage.getItem('sound_enabled') !== 'false';
+
+// Sound Toggle Element
+const soundToggle = document.getElementById('sound-toggle');
+const soundOnIcon = document.querySelector('.sound-on-icon');
+const soundOffIcon = document.querySelector('.sound-off-icon');
+
+function updateSoundToggleUI() {
+  if (!soundToggle || !soundOnIcon || !soundOffIcon) return;
+  if (state.soundEnabled) {
+    soundOnIcon.classList.remove('hidden');
+    soundOffIcon.classList.add('hidden');
+  } else {
+    soundOnIcon.classList.add('hidden');
+    soundOffIcon.classList.remove('hidden');
+  }
+}
+
 // Sound & Confetti Celebrations
-function triggerCompletionCelebration() {
-  // 1. Confetti
+function triggerCompletionCelebration(cardElement) {
+  // 1. Confetti Explosion
   if (typeof confetti === 'function') {
     confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.7 }
+      particleCount: 60,
+      spread: 70,
+      origin: { y: 0.65 },
+      colors: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
     });
   }
 
-  // 2. Web Audio Synthesizer Chime
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) {
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-      osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15); // E5
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
+  // 2. Web Audio Synthesizer Triad Chord (C5 -> E5 -> G5)
+  if (state.soundEnabled) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          gain.gain.setValueAtTime(0.12, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.25);
+        });
+      }
+    } catch (e) {}
+  }
+
+  // 3. Floating XP Popup Animation on card element
+  if (cardElement) {
+    const xp = document.createElement('div');
+    xp.className = 'xp-popup';
+    xp.textContent = '+50 XP ✨';
+    cardElement.appendChild(xp);
+    setTimeout(() => xp.remove(), 1200);
+  }
+
+  // Record completed task timestamp for streak
+  recordCompletionForStreak();
+}
+
+// Streak & Level System
+function recordCompletionForStreak() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const lastDateStr = localStorage.getItem('last_completion_date');
+  let currentStreak = parseInt(localStorage.getItem('user_streak') || '1', 10);
+
+  if (!lastDateStr) {
+    currentStreak = 1;
+  } else if (lastDateStr !== todayStr) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (lastDateStr === yesterdayStr) {
+      currentStreak += 1;
+    } else {
+      currentStreak = 1; // Streak reset if missed a day
     }
-  } catch (e) {}
+  }
+
+  localStorage.setItem('last_completion_date', todayStr);
+  localStorage.setItem('user_streak', currentStreak.toString());
+  updateStreakAndLevelDisplay();
+}
+
+function updateStreakAndLevelDisplay() {
+  const streakEl = document.getElementById('stats-streak');
+  const levelEl = document.getElementById('stats-level');
+  if (!streakEl || !levelEl) return;
+
+  const streak = parseInt(localStorage.getItem('user_streak') || '1', 10);
+  const completedCount = state.todos.filter(t => t.completed).length;
+
+  streakEl.textContent = streak;
+
+  // Calculate Productivity Title Level
+  let levelTitle = 'Novice Achiever';
+  if (completedCount >= 30 || streak >= 14) levelTitle = '👑 Workforce Legend';
+  else if (completedCount >= 15 || streak >= 7) levelTitle = '🔥 Task Master';
+  else if (completedCount >= 5 || streak >= 3) levelTitle = '⚡ Productivity Pro';
+
+  levelEl.textContent = levelTitle;
 }
 
 // API Communication
@@ -317,7 +409,7 @@ async function handleAddTodo(e) {
   renderTodos();
 }
 
-async function toggleTodoComplete(id, completed) {
+async function toggleTodoComplete(id, completed, cardElement) {
   const todo = state.todos.find(t => t.id === id);
   if (!todo) return;
 
@@ -326,7 +418,7 @@ async function toggleTodoComplete(id, completed) {
   setStoredTodos(state.todos);
 
   if (completed) {
-    triggerCompletionCelebration();
+    triggerCompletionCelebration(cardElement);
   }
 
   renderTodos();
@@ -340,7 +432,7 @@ async function toggleTodoComplete(id, completed) {
   } catch (error) {}
 }
 
-async function updateTodoStatus(id, newStatus) {
+async function updateTodoStatus(id, newStatus, cardElement) {
   const todo = state.todos.find(t => t.id === id);
   if (!todo) return;
 
@@ -349,7 +441,7 @@ async function updateTodoStatus(id, newStatus) {
   setStoredTodos(state.todos);
 
   if (newStatus === 'completed') {
-    triggerCompletionCelebration();
+    triggerCompletionCelebration(cardElement);
   }
 
   renderTodos();
@@ -477,11 +569,13 @@ function updateDashboard() {
   const pending = total - completed;
   const ratio = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  statsTotal.textContent = total;
-  statsCompleted.textContent = completed;
-  statsPending.textContent = pending;
-  statsRatio.textContent = `${ratio}%`;
-  statsProgressFill.style.width = `${ratio}%`;
+  if (statsTotal) statsTotal.textContent = total;
+  if (statsCompleted) statsCompleted.textContent = completed;
+  if (statsPending) statsPending.textContent = pending;
+  if (statsRatio) statsRatio.textContent = `${ratio}%`;
+  if (statsProgressFill) statsProgressFill.style.width = `${ratio}%`;
+
+  updateStreakAndLevelDisplay();
 }
 
 function renderTodos() {
@@ -656,7 +750,7 @@ function createTodoCardElement(todo, mode) {
 
   // Attach Event Handlers
   const checkbox = li.querySelector('input[type="checkbox"]');
-  checkbox.addEventListener('change', (e) => toggleTodoComplete(todo.id, e.target.checked));
+  checkbox.addEventListener('change', (e) => toggleTodoComplete(todo.id, e.target.checked, li));
 
   const deleteBtn = li.querySelector('.btn-action.delete');
   deleteBtn.addEventListener('click', () => deleteTodo(todo.id, li));

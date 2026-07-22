@@ -41,6 +41,10 @@
           <span class="status-indicator"></span>
           <span class="profile-name">Abdul Kader</span>
         </div>
+        <button id="sound-toggle" class="btn-icon" aria-label="Toggle Sound Effects" title="Toggle Sound FX">
+          <i data-lucide="volume-2" class="sound-on-icon"></i>
+          <i data-lucide="volume-x" class="sound-off-icon hidden"></i>
+        </button>
         <button id="theme-toggle" class="btn-icon" aria-label="Toggle theme">
           <i data-lucide="sun" class="sun-icon"></i>
           <i data-lucide="moon" class="moon-icon"></i>
@@ -64,11 +68,14 @@
           <span class="stat-label">Completed</span>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon pending"><i data-lucide="clock"></i></div>
+      <div class="stat-card streak-card">
+        <div class="stat-icon streak-flame"><i data-lucide="flame"></i></div>
         <div class="stat-info">
-          <span class="stat-value" id="stats-pending">0</span>
-          <span class="stat-label">Pending</span>
+          <div class="streak-header">
+            <span class="stat-value" id="stats-streak">1</span>
+            <span class="streak-unit">Day Streak 🔥</span>
+          </div>
+          <span class="stat-label" id="stats-level">Novice Achiever</span>
         </div>
       </div>
       <div class="stat-card progress-card">

@@ -370,6 +370,54 @@ body {
   color: var(--prio-low);
 }
 
+.stat-icon.streak-flame {
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+  animation: flame-pulse 2s infinite ease-in-out;
+}
+
+@keyframes flame-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
+  50% { transform: scale(1.08); box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+}
+
+.streak-header {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.streak-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+/* Floating XP Popup Animation */
+.xp-popup {
+  position: absolute;
+  top: -20px;
+  right: 20px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 4px 10px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 100;
+  animation: float-xp 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+@keyframes float-xp {
+  0% { opacity: 0; transform: translateY(10px) scale(0.7); }
+  30% { opacity: 1; transform: translateY(-10px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.9); }
+}
+
 .stat-icon.pending {
   background: rgba(245, 158, 11, 0.15);
   color: var(--prio-medium);
